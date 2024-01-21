@@ -40,6 +40,12 @@ const videoSchema=new Schema({
 
 },{timestamps:true});
 
+videoSchema.methods.addView=function(){
+    this.views=this.views+1;
+    this.save();
+    return  this.views;
+}
+
 videoSchema.plugin(mongooseAggregatePaginate);
 export const Video=mongoose.model("Video",videoSchema);
 

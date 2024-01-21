@@ -89,4 +89,17 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
+
+userSchema.methods.addToWatchHistory = async function (videoId) {
+  if (!this.watchHistory.includes(videoId)) {
+    this.watchHistory.push(videoId);
+    await this.save(); // Save the updated document
+    return true;
+  }else{
+    console.log("Already in watch history");
+    return false;
+  }
+};
+
+
 export const User = mongoose.model("User", userSchema);

@@ -6,7 +6,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
-
 // TODO :: Get ALl videos
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -62,9 +61,15 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   if (!videoId) throw new ApiError(400, "Video ID is required");
+  const userId = req.user._id;
 
   const videoDetail = await Video.findById(videoId);
   if (!videoDetail) throw new ApiError(404, "Video not found");
+  const user = await User.findById(userId).select("watchHistory");
+  const viewStatus=await user.addToWatchHistory(videoId);
+  if(viewStatus){
+    videoDetail.addView();
+  }
   return res.status(200).json(new ApiResponse(200, "Video found", videoDetail));
 });
 
