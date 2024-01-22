@@ -26,7 +26,7 @@ const userSchema = new Schema(
       index: true,
     },
     password: {
-      type: String, 
+      type: String,
       required: [true, "Password is required"],
     },
     avatar: {
@@ -37,7 +37,7 @@ const userSchema = new Schema(
       type: String, //cloudanry url
     },
     watchHistory: [
-    //  {v1},{v2},{v3}
+      //  {v1},{v2},{v3}
       {
         type: Schema.Types.ObjectId,
         ref: "Video",
@@ -59,7 +59,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// SCHEMA PLUGINS 
+// SCHEMA PLUGINS
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
@@ -89,17 +89,14 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-
 userSchema.methods.addToWatchHistory = async function (videoId) {
   if (!this.watchHistory.includes(videoId)) {
     this.watchHistory.push(videoId);
     await this.save(); // Save the updated document
     return true;
-  }else{
-    console.log("Already in watch history");
+  } else {
     return false;
   }
 };
-
 
 export const User = mongoose.model("User", userSchema);

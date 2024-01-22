@@ -6,10 +6,45 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
-// TODO :: Get ALl videos
+// // TODO :: Get ALl videos
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
-  console.log("Videos Gotten:", req);
+  const { page = 1, limit = 1, query, sortBy="title", sortType="desc", userId } = req.query;
+
+  let sortOptions = {};
+
+  if (sortBy) {
+    sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
+  } else {
+    sortOptions.description = 1;
+  }
+  console.log("sortOptions",sortOptions)
+
+  let basequery = {};
+  if (query) {
+    basequery.$or = [
+      { title: { $regex: query, $options: "i" } },
+      { description: { $regex: query, $options: "i" } },
+    ];
+  }
+
+  const result = await Video.aggregatePaginate(
+    [
+      {
+        $match: {
+          ...basequery,
+          owner:new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $sort: sortOptions,
+      },
+    ],
+    { page, limit }
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "All Videos fetched Successfully"));
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -66,8 +101,8 @@ const getVideoById = asyncHandler(async (req, res) => {
   const videoDetail = await Video.findById(videoId);
   if (!videoDetail) throw new ApiError(404, "Video not found");
   const user = await User.findById(userId).select("watchHistory");
-  const viewStatus=await user.addToWatchHistory(videoId);
-  if(viewStatus){
+  const viewStatus = await user.addToWatchHistory(videoId);
+  if (viewStatus) {
     videoDetail.addView();
   }
   return res.status(200).json(new ApiResponse(200, "Video found", videoDetail));
@@ -138,24 +173,28 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   const videoOwner = await Video.findById(videoId).select("owner");
   const userId = req.user._id;
   const owner = videoOwner?.owner;
+
   if (!userId.equals(owner))
     throw new ApiError(403, "You are not authorized to delete this video");
-  const { isPublished } = await Video.findById(videoId).select("isPublsihed");
-  const togglePublishStatus = await Video.findByIdAndUpdate(videoId, {
-    $set: {
-      isPublished: !isPublished,
+  const { isPublished } = await Video.findById(videoId).select("isPublished");
+  console.log("isPublished:", isPublished);
+  const togglePublishStatus = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        isPublished: !isPublished,
+      },
     },
-  });
+    {
+      new: true,
+    }
+  );
   if (!togglePublishStatus)
     throw new ApiError(500, "Error while updating video");
   return res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        "Video Toggle successfully",
-        togglePublishStatus.isPublished
-      )
+      new ApiResponse(200, "Video Toggle successfully", togglePublishStatus)
     );
 });
 

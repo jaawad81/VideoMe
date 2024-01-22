@@ -20,12 +20,5 @@ const subscriptionSchema = new Schema(
 
 export const Subscription= mongoose.model("Subscription",subscriptionSchema);
 
-// channel:: chai aur code , p4Provider
-// user:: jawad , usama
 
-
-// {
-//   jawad,   subscriber
-//   oyeusama channel
-// },
 
