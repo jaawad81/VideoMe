@@ -33,6 +33,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         $match: {
           ...basequery,
           owner:new mongoose.Types.ObjectId(userId),
+          isPublished:true
         },
       },
       {

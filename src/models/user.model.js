@@ -90,6 +90,7 @@ userSchema.methods.generateRefreshToken = function () {
 };
 
 userSchema.methods.addToWatchHistory = async function (videoId) {
+  console.log(this.watchHistory);
   if (!this.watchHistory.includes(videoId)) {
     this.watchHistory.push(videoId);
     await this.save(); // Save the updated document
